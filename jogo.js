@@ -94,7 +94,7 @@ const flappyBird = {
   */
   atualiza() {
     flappyBird.velocidade = flappyBird.velocidade + flappyBird.gravidade;
-    console.log(flappyBird.velocidade);
+    // console.log(flappyBird.velocidade);
     flappyBird.y = flappyBird.y + flappyBird.velocidade;
   },
 
@@ -113,13 +113,76 @@ const flappyBird = {
   },
 };
 
+// Mensagem inicial
+const mensagemGetReady = {
+  sX: 134,
+  sY: 0,
+  w: 174,
+  h: 152,
+  x: canvas.width / 2 - 174 / 2,
+  y: 50,
+  desenha() {
+    contexto.drawImage(
+      sprites,
+      mensagemGetReady.sX,
+      mensagemGetReady.sY,
+      mensagemGetReady.w,
+      mensagemGetReady.h,
+      mensagemGetReady.x,
+      mensagemGetReady.y,
+      mensagemGetReady.w,
+      mensagemGetReady.h
+    );
+  },
+};
+
+// Telas do jogo
+let telaAtiva = {};
+
+function mudaParaTela(novaTela) {
+  telaAtiva = novaTela;
+}
+
+const telas = {
+  INICIO: {
+    desenha() {
+      planoDeFundo.desenha();
+      chao.desenha();
+      flappyBird.desenha();
+      mensagemGetReady.desenha();
+    },
+    click() {
+      mudaParaTela(telas.JOGO);
+    },
+    atualiza() {},
+  },
+};
+
+telas.JOGO = {
+  desenha() {
+    planoDeFundo.desenha();
+    chao.desenha();
+    flappyBird.desenha();
+  },
+  atualiza() {
+    flappyBird.atualiza();
+  },
+};
+
 function loop() {
-  flappyBird.atualiza();
-  planoDeFundo.desenha();
-  chao.desenha();
-  flappyBird.desenha();
+  telaAtiva.desenha();
+  telaAtiva.atualiza();
 
   requestAnimationFrame(loop);
 }
 
+window.addEventListener("click", function () {
+  if(telaAtiva.click){
+    console.log(telaAtiva)
+    telaAtiva.click();
+  }
+});
+
+mudaParaTela(telas.INICIO);
+console.log(telaAtiva);
 loop();
