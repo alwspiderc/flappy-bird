@@ -1,6 +1,10 @@
+// Criando referência do som HIT
+const som_HIT = new Audio();
+som_HIT.src = "./assets/efeitos/hit.wav";
+
 // Criando referência de imagem
 const sprites = new Image();
-sprites.src = "./sprites.png";
+sprites.src = "./assets/img/sprites.png";
 
 const canvas = document.querySelector("canvas");
 const contexto = canvas.getContext("2d");
@@ -78,40 +82,72 @@ const chao = {
   },
 };
 
-// Flappy Bird
-const flappyBird = {
-  spriteX: 0,
-  spriteY: 0,
-  largura: 33,
-  altura: 24,
-  x: 10,
-  y: 50,
-  gravidade: 0.25,
-  velocidade: 0,
-  /*  Lógica para queda do passarinho:
-      o passarinho vai cair mais rápido conforma a gravidade para puxando.
-      a soma da velocidade será a soma da velocidade atual mais a gravidade para, o eixo y será o total da velocidade mais o eixo y.
-  */
-  atualiza() {
-    flappyBird.velocidade = flappyBird.velocidade + flappyBird.gravidade;
-    // console.log(flappyBird.velocidade);
-    flappyBird.y = flappyBird.y + flappyBird.velocidade;
-  },
+function fazColisao(flappyBird, chao) {
+  const flappyBirdY = flappyBird.y + flappyBird.altura;
+  const chaoY = chao.y;
 
-  desenha() {
-    contexto.drawImage(
-      sprites,
-      flappyBird.spriteX,
-      flappyBird.spriteY, // Sprite X, Sprite Y
-      flappyBird.largura,
-      flappyBird.altura, // Tamanho do recorte na sprite
-      flappyBird.x,
-      flappyBird.y, // Onde o Sprite será desenhado na tela
-      flappyBird.largura,
-      flappyBird.altura // Tamanho do Sprite
-    );
-  },
-};
+  if (flappyBirdY >= chaoY) {
+    return true;
+  }
+  return false;
+}
+
+function criaFlappyBird() {
+  const flappyBird = {
+    spriteX: 0,
+    spriteY: 0,
+    largura: 33,
+    altura: 24,
+    x: 10,
+    y: 50,
+    pulo: 4.6,
+    pula() {
+      console.log("[ANTES:] " + flappyBird.velocidade);
+      flappyBird.velocidade = -flappyBird.pulo;
+      console.log("[DEPOIS:] " + flappyBird.velocidade);
+    },
+    gravidade: 0.25,
+    velocidade: 0,
+
+    /*  Lógica para queda do passarinho:
+        o passarinho vai cair mais rápido conforma a gravidade para puxando.
+        a soma da velocidade será a soma da velocidade atual mais a gravidade para, o eixo y será o total da velocidade mais o eixo y.
+    */
+    atualiza() {
+      if (fazColisao(flappyBird, chao)) {
+        som_HIT.play();
+
+        setTimeout(() => {
+          mudaParaTela(telas.INICIO);
+        }, 500)
+        
+        console.log("teste");
+        return;
+      }
+      flappyBird.velocidade = flappyBird.velocidade + flappyBird.gravidade;
+      // console.log(flappyBird.velocidade);
+      flappyBird.y = flappyBird.y + flappyBird.velocidade;
+    },
+
+    desenha() {
+      contexto.drawImage(
+        sprites,
+        flappyBird.spriteX,
+        flappyBird.spriteY, // Sprite X, Sprite Y
+        flappyBird.largura,
+        flappyBird.altura, // Tamanho do recorte na sprite
+        flappyBird.x,
+        flappyBird.y, // Onde o Sprite será desenhado na tela
+        flappyBird.largura,
+        flappyBird.altura // Tamanho do Sprite
+      );
+    },
+  };
+
+  return flappyBird;
+}
+
+// Flappy Bird
 
 // Mensagem inicial
 const mensagemGetReady = {
@@ -136,19 +172,29 @@ const mensagemGetReady = {
   },
 };
 
+
+const globais = {};
 // Telas do jogo
 let telaAtiva = {};
 
 function mudaParaTela(novaTela) {
   telaAtiva = novaTela;
+
+  if(telaAtiva.inicializa) {
+    telaAtiva.inicializa();
+  }
 }
 
 const telas = {
   INICIO: {
+    inicializa() {
+      globais.flappyBird = criaFlappyBird();
+    },
+
     desenha() {
       planoDeFundo.desenha();
       chao.desenha();
-      flappyBird.desenha();
+      globais.flappyBird.desenha();
       mensagemGetReady.desenha();
     },
     click() {
@@ -162,10 +208,14 @@ telas.JOGO = {
   desenha() {
     planoDeFundo.desenha();
     chao.desenha();
-    flappyBird.desenha();
+    globais.flappyBird.desenha();
   },
+  click() {
+    globais.flappyBird.pula();
+  },
+
   atualiza() {
-    flappyBird.atualiza();
+    globais.flappyBird.atualiza();
   },
 };
 
@@ -177,12 +227,12 @@ function loop() {
 }
 
 window.addEventListener("click", function () {
-  if(telaAtiva.click){
-    console.log(telaAtiva)
+  if (telaAtiva.click) {
+    //  console.log(telaAtiva)
     telaAtiva.click();
   }
 });
 
 mudaParaTela(telas.INICIO);
-console.log(telaAtiva);
+//console.log(telaAtiva);
 loop();
